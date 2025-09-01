@@ -9,6 +9,16 @@ import { loadEnvironment, loadSettings } from './settings.js';
 
 export function validateAuthMethod(authMethod: string): string | null {
   loadEnvironment(loadSettings(process.cwd()).merged);
+  
+  // DeepSeek API validation
+  if (authMethod === AuthType.USE_DEEPSEEK) {
+    if (!process.env['DEEPSEEK_API_KEY']) {
+      return 'DEEPSEEK_API_KEY environment variable not found. Add that to your environment and try again (no reload needed if using .env)!';
+    }
+    return null;
+  }
+
+  // Legacy support for other auth methods
   if (
     authMethod === AuthType.LOGIN_WITH_GOOGLE ||
     authMethod === AuthType.CLOUD_SHELL

@@ -5,28 +5,30 @@
  */
 
 import type {
-  Content,
-  ContentListUnion,
-  ContentUnion,
-  GenerateContentConfig,
   GenerateContentParameters,
   CountTokensParameters,
   CountTokensResponse,
-  GenerationConfigRoutingConfig,
-  MediaResolution,
-  Candidate,
-  ModelSelectionConfig,
-  GenerateContentResponsePromptFeedback,
-  GenerateContentResponseUsageMetadata,
-  Part,
-  SafetySetting,
-  PartUnion,
-  SpeechConfigUnion,
-  ThinkingConfig,
-  ToolListUnion,
-  ToolConfig,
-} from '@google/genai';
-import { GenerateContentResponse } from '@google/genai';
+  GenerateContentResponse,
+} from '../core/contentGenerator.js';
+
+// Legacy types for backward compatibility
+type Content = any;
+type ContentListUnion = any;
+type ContentUnion = any;
+type GenerateContentConfig = any;
+type GenerationConfigRoutingConfig = any;
+type MediaResolution = any;
+type Candidate = any;
+type ModelSelectionConfig = any;
+type GenerateContentResponsePromptFeedback = any;
+type GenerateContentResponseUsageMetadata = any;
+type Part = any;
+type SafetySetting = any;
+type PartUnion = any;
+type SpeechConfigUnion = any;
+type ThinkingConfig = any;
+type ToolListUnion = any;
+type ToolConfig = any;
 
 export interface CAGenerateContentRequest {
   model: string;
@@ -132,12 +134,20 @@ export function fromGenerateContentResponse(
   res: CaGenerateContentResponse,
 ): GenerateContentResponse {
   const inres = res.response;
-  const out = new GenerateContentResponse();
-  out.candidates = inres.candidates;
-  out.automaticFunctionCallingHistory = inres.automaticFunctionCallingHistory;
-  out.promptFeedback = inres.promptFeedback;
-  out.usageMetadata = inres.usageMetadata;
-  return out;
+  return {
+    text: inres.candidates?.[0]?.content?.parts?.[0]?.text,
+    data: inres,
+    choices: inres.candidates?.map((candidate: any) => ({
+      message: {
+        content: candidate.content?.parts?.[0]?.text || '',
+        role: 'assistant',
+      },
+      finish_reason: candidate.finishReason,
+    })),
+    functionCalls: [],
+    executableCode: undefined,
+    codeExecutionResult: undefined,
+  };
 }
 
 function toVertexGenerateContentRequest(
@@ -146,13 +156,16 @@ function toVertexGenerateContentRequest(
 ): VertexGenerateContentRequest {
   return {
     contents: toContents(req.contents),
-    systemInstruction: maybeToContent(req.config?.systemInstruction),
-    cachedContent: req.config?.cachedContent,
-    tools: req.config?.tools,
-    toolConfig: req.config?.toolConfig,
-    labels: req.config?.labels,
-    safetySettings: req.config?.safetySettings,
-    generationConfig: toVertexGenerationConfig(req.config),
+    systemInstruction: undefined, // Not supported in simplified interface
+    cachedContent: undefined,
+    tools: undefined,
+    toolConfig: undefined,
+    labels: undefined,
+    safetySettings: undefined,
+    generationConfig: {
+      temperature: req.temperature,
+      maxOutputTokens: req.max_tokens,
+    },
     session_id: sessionId,
   };
 }

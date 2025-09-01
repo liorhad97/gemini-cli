@@ -6,12 +6,14 @@
 
 import type {
   EmbedContentParameters,
-  GenerateContentConfig,
-  PartListUnion,
-  Content,
-  Tool,
   GenerateContentResponse,
-} from '@google/genai';
+} from './contentGenerator.js';
+
+// Legacy types for compatibility
+type GenerateContentConfig = any;
+type PartListUnion = any;
+type Content = any;
+type Tool = any;
 import {
   getDirectoryContextString,
   getEnvironmentContext,
@@ -601,13 +603,13 @@ export class GeminiClient {
         this.getContentGenerator().generateContent(
           {
             model: modelToUse,
-            config: {
-              ...requestConfig,
-              systemInstruction,
-              responseJsonSchema: schema,
-              responseMimeType: 'application/json',
-            },
             contents,
+            messages: contents?.map((content: any, index: number) => ({
+              role: index % 2 === 0 ? 'user' : 'assistant',
+              content: typeof content === 'string' ? content : JSON.stringify(content)
+            })) || [],
+            max_tokens: 2000,
+            temperature: 0.1,
           },
           this.lastPromptId,
         );
@@ -713,8 +715,13 @@ export class GeminiClient {
         this.getContentGenerator().generateContent(
           {
             model: modelToUse,
-            config: requestConfig,
             contents,
+            messages: contents?.map((content: any, index: number) => ({
+              role: index % 2 === 0 ? 'user' : 'assistant',
+              content: typeof content === 'string' ? content : JSON.stringify(content)
+            })) || [],
+            max_tokens: 4000,
+            temperature: requestConfig?.temperature || 0,
           },
           this.lastPromptId,
         );

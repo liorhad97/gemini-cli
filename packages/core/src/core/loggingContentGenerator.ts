@@ -5,15 +5,21 @@
  */
 
 import type {
-  Content,
   CountTokensParameters,
   CountTokensResponse,
   EmbedContentParameters,
   EmbedContentResponse,
   GenerateContentParameters,
-  GenerateContentResponseUsageMetadata,
   GenerateContentResponse,
-} from '@google/genai';
+} from './contentGenerator.js';
+
+// Legacy Gemini types for compatibility
+type Content = any;
+type GenerateContentResponseUsageMetadata = {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount: number;
+};
 import {
   ApiRequestEvent,
   ApiResponseEvent,
@@ -184,6 +190,12 @@ export class LoggingContentGenerator implements ContentGenerator {
   async embedContent(
     req: EmbedContentParameters,
   ): Promise<EmbedContentResponse> {
-    return this.wrapped.embedContent(req);
+    if (this.wrapped.embedContent) {
+      return this.wrapped.embedContent(req);
+    }
+    // Fallback for generators that don't support embeddings
+    return {
+      embedding: new Array(1536).fill(0),
+    };
   }
 }

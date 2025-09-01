@@ -7,6 +7,8 @@
 export * from './src/index.js';
 export { Storage } from './src/config/storage.js';
 export {
+  DEFAULT_DEEPSEEK_MODEL,
+  DEFAULT_DEEPSEEK_REASONER_MODEL,
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_FLASH_LITE_MODEL,

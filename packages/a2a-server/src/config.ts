@@ -18,8 +18,7 @@ import {
   ApprovalMode,
   loadServerHierarchicalMemory,
   GEMINI_CONFIG_DIR,
-  DEFAULT_GEMINI_EMBEDDING_MODEL,
-  DEFAULT_GEMINI_MODEL,
+  DEFAULT_DEEPSEEK_MODEL,
 } from '@google/gemini-cli-core';
 
 import { logger } from './logger.js';
@@ -38,8 +37,8 @@ export async function loadConfig(
 
   const configParams: ConfigParameters = {
     sessionId: taskId,
-    model: DEFAULT_GEMINI_MODEL,
-    embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
+    model: DEFAULT_DEEPSEEK_MODEL,
+    embeddingModel: undefined, // DeepSeek doesn't support embedding models
     sandbox: undefined, // Sandbox might not be relevant for a server-side agent
     targetDir: workspaceDir, // Or a specific directory the agent operates on
     debugMode: process.env['DEBUG'] === 'true' || false,
@@ -89,7 +88,10 @@ export async function loadConfig(
   // Needed to initialize ToolRegistry, and git checkpointing if enabled
   await config.initialize();
 
-  if (process.env['USE_CCPA']) {
+  if (process.env['DEEPSEEK_API_KEY']) {
+    logger.info('[Config] Using DeepSeek API Key');
+    await config.refreshAuth(AuthType.USE_DEEPSEEK);
+  } else if (process.env['USE_CCPA']) {
     logger.info('[Config] Using CCPA Auth:');
     try {
       if (adcFilePath) {
@@ -109,7 +111,7 @@ export async function loadConfig(
     await config.refreshAuth(AuthType.USE_GEMINI);
   } else {
     logger.error(
-      `[Config] Unable to set GeneratorConfig. Please provide a GEMINI_API_KEY or set USE_CCPA.`,
+      `[Config] Unable to set GeneratorConfig. Please provide a DEEPSEEK_API_KEY, GEMINI_API_KEY or set USE_CCPA.`,
     );
   }
 
